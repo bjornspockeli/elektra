@@ -48,7 +48,7 @@ Note: The LEDs on the nRF52 are active low.
 
 ```C
     static app_button_cfg_t button_config;
-    button_config.pin_no        = 1;
+    button_config.pin_no        = BUTTON_1;
     button_config.active_state  = APP_BUTTON_ACTIVE_LOW;
     button_config.pull_cfg      = NRF_GPIO_PIN_PULLUP; 
     button_config.button_handler = button_handler;
@@ -56,11 +56,16 @@ Note: The LEDs on the nRF52 are active low.
 Since there are 4 buttons on the nRF52 DK you have to create an array that contains 4 of these structs, i.e. 
 
 ```C
-   static app_button_cfg_t button_config[4]
-   button_config[0].pin_no        = 1;
+    static app_button_cfg_t button_config[4];
+    button_config[0].pin_no        = BUTTON_1 ;
+    button_config.active_state  = APP_BUTTON_ACTIVE_LOW;
+    button_config.pull_cfg      = NRF_GPIO_PIN_PULLUP; 
+    button_config.button_handler = button_handler;
    ...
 ```
 
+After creating the app_button_cfg_t button_config[4] array, you have to call [app_button_init](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__button.html#ga5948c3d8e3e385820dc7d8df0976e8eb) and [app_button_enable](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__button.html#gab498b436a38ebb03393e1129a6daffc9)
+in that order.
 2. Create the callback function `button_handler(uint8_t pin_no, uint8_t button_action)` that will be called whenever a button is pressed or released. In this function you can check which button that was pressed and which action caused the callback, i.e. 
 
 ```C
