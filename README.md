@@ -58,9 +58,14 @@ Since there are 4 buttons on the nRF52 DK you have to create an array that conta
 ```C
     static app_button_cfg_t button_config[4];
     button_config[0].pin_no        = BUTTON_1 ;
-    button_config.active_state  = APP_BUTTON_ACTIVE_LOW;
-    button_config.pull_cfg      = NRF_GPIO_PIN_PULLUP; 
-    button_config.button_handler = button_handler;
+    button_config[0].active_state  = APP_BUTTON_ACTIVE_LOW;
+    button_config[0].pull_cfg      = NRF_GPIO_PIN_PULLUP; 
+    button_config[0].button_handler = button_handler;
+    
+    button_config[1].pin_no        = BUTTON_1 ;
+    button_config[1].active_state  = APP_BUTTON_ACTIVE_LOW;
+    button_config[1].pull_cfg      = NRF_GPIO_PIN_PULLUP; 
+    button_config[1].button_handler = button_handler;
    ...
 ```
 
