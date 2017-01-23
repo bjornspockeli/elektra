@@ -4,9 +4,9 @@ Examples and tasks for the Elektra BLE course.
 ### Presentations
 The presentations from the course can be downloaded using the links below:
 
-[nRF52 Introduction and BLE Protocol Basics ](https://drive.google.com/open?id=0B21ni_IYbeTXSTlqUjh2T2RpZjQ)
+[Nordic Introduction and Course Agenda](https://drive.google.com/open?id=0B21ni_IYbeTXaUdDeXZmbi1xeG8)
 
-[Nordic INtroduction and Course Agenda](https://drive.google.com/open?id=0B21ni_IYbeTXaUdDeXZmbi1xeG8)
+[nRF52 Introduction and BLE Protocol Basics ](https://drive.google.com/open?id=0B21ni_IYbeTXSTlqUjh2T2RpZjQ)
 
 [nRF52 & PWM](https://drive.google.com/open?id=0B21ni_IYbeTXbkZrdjNBRGpuNzQ)
 
@@ -23,6 +23,10 @@ Copy the content of the folder to your computer and follow the instructions give
 
 
 ## Hands-on Tasks - Day 1 
+
+During the first day of the course we will use the nRF52832 as 
+
+The tasks should be performed in the order that they are given and you should use the Template Project found in  nRF5_SDK_12.2.0\examples\peripheral\template_project.
 
 The hands-on tasks for the first course day will cover the use of the application timer library, the button handler library and the UART library. If you have some time left after finsihing the 3 first taske, then you may try to solve the optional Temperature Sensor task.
 
