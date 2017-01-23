@@ -71,6 +71,7 @@ Since there are 4 buttons on the nRF52 DK you have to create an array that conta
 
 After creating the app_button_cfg_t button_config[4] array, you have to call [app_button_init](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__button.html#ga5948c3d8e3e385820dc7d8df0976e8eb) and [app_button_enable](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__button.html#gab498b436a38ebb03393e1129a6daffc9)
 in that order.
+
 2. Create the callback function `button_handler(uint8_t pin_no, uint8_t button_action)` that will be called whenever a button is pressed or released. In this function you can check which button that was pressed and which action caused the callback, i.e. 
 
 ```C
