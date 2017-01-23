@@ -123,21 +123,34 @@ in that order.
         }
     }
 ```
-The APP_UART_DATA_READY event will be generated for each single byte that is received by the nRF52, which 
-Most terminals append the `\n` character, also known as the Line Feed character, which indicates that the next character should be printed on a newline. 
-
-Hint: The function app_uart_put is used to place data in the UART's transmit buffer and must be called in a for-loop if more that one byte is to be sent, i.e. 
+The APP_UART_DATA_READY event will be generated for each single byte that is received by the nRF52, which means that [app_uart_get](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__uart.html#gacddb5b7b711ef104f9eb181a13bc4503) must be called everytime the event is received. Since the [app_uart_get](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__uart.html#gacddb5b7b711ef104f9eb181a13bc4503) function takes the pointer to a uint8_t, we need an array to store the received bytes and and index variable to keep track of how many bytes we have received, i.e.
 ```C
-    for (uint32_t i = 0; i < strlen((const char *)data); i++)
+    static uint8_t data_array[32];
+    static uint8_t index = 0;
+```
+Most terminals append the `\n` character, also known as the Line Feed character, to the end of the string that is sent. The `\n`  indicates that the next character should be printed on a newline. Therefore it makes sense to receive bytes until we see the `\n` character and then send the entire string back to the terminal using [app_uart_put](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__uart.html#ga2e4c8407274a151e72ed5a226529dc36). 
+
+```C
+  if (data_array[index - 1] == '\n') 
+  {
+    // Call app_uart_put to sent the bytes stored in data_array back to the terminal.
+  }
+```
+
+Hint: The function app_uart_put used to place data in the UART's transmit buffer must be called in a for-loop if more that one byte is to be sent, i.e. 
+```C
+    for (uint32_t i = 0; i < strlen((const char *)data_array); i++)
     {
-        while (app_uart_put(data[i]) != NRF_SUCCESS);
+        while (app_uart_put(data_array[i]) != NRF_SUCCESS);
     }
 ```
 
 ##Task 4: Temperature Sensor (Optional)
 **Scope:** Use the die temperature sensor on the nRF52 to measure the temperature in the room. 
+
 1 . Create the function read_temperature() that returns the die temperature as a int32_t.
 Hint: Take a look at the temperature example in the SDK before you start modifying your template example.
+
 2. Send the temperature data to your terminal application using the UART. 
 
 Hint 1: The function app_uart_put is used to place data in the UART's transmit buffer and must be called in a for-loop if more that one byte is to be sent, i.e. 
@@ -158,7 +171,7 @@ Connecting the Servo to your nRF52 DK:
 
 The three wires coming from the SG92R Servo are:
 
-Brown: 	Ground 				- Should be connected to one of the pins marked GND on your nRF52 DK.
+Brown: 	Ground 				- Should be connected to one of the pins marked GND on your nRF52 DK. 
 
 Red: 	5V 					- Should be connected to the pin marked 5V on your nRF52 DK.
 
