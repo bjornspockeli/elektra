@@ -25,6 +25,10 @@ Copy the content of the folder to your computer and follow the instructions give
 
 ## Hands-on Tasks - DAY 1 
 
+The handson tasks for the first course day will cover 
+
+As you progress through the tasks make sure that you enable the 
+
 ##Task 1: Application Timer
 **Scope:** Use an application timer to toggle one (or several) Leds on the nRF52 DK at a given interval. 
 
@@ -35,8 +39,9 @@ Copy the content of the folder to your computer and follow the instructions give
 ##Task 2: Button Handler
 **Scope:** Use the buttons on the nRF52 and the button handler library(app_button) to start and stop the application timer from Task 1. The button handler library is documented on [this](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__button.html?resultof=%22%62%75%74%74%6f%6e%22%20%22%68%61%6e%64%6c%65%72%22%20) Infocenter page. 
 
-1. Create a function called `button_init()`, where you configure the buttons you want to start and stop the application timer and enable the button handler module. Hint: The  
+1. Create a function called `button_init()`, where you configure the buttons you want to start and stop the application timer and enable the button handler module. Hint: The pins connected to the buttons will be short to ground when the buttons are pressed and should therefore be pulled to VDD when not pressed.
 2. Create the callback function `button_handler(uint8_t pin_no, uint8_t button_action)` that will be used check which button that was pressed and which action that should be assosiated with that button. 
+3. Call the `start_timer`function from task 1 when Button 1 is pressed and `stop_timer`when button 2 is pressed. 
 
 
 
@@ -44,7 +49,7 @@ Copy the content of the folder to your computer and follow the instructions give
 **Scope:** Use the nRF52's UART peripheral and the UART library (app_uart) to echo data sent from a terminal. If you do not already have a favorite terminal application, then I recommend using [Termite] (http://www.compuphase.com/software_termite.htm). The UART library is documented on [this](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__uart.html?resultof=%22%41%50%50%5f%55%41%52%54%5f%46%49%46%4f%5f%49%4e%49%54%22%20) Infocenter page. 
 
 1. Create the function uart_init where you use the APP_UART_FIFO_INIT macro to initialize the UART module.
-   The baudrate should be set to 115200, Flow Control should be disabled and no parity bits are used. The UART pins of the nRF52 DK are    listed on the backside of the board. 
+   The baudrate should be set to 115200, Flow Control should be disabled, no parity bits are used and the RX and TX buffers should be      set to 256 in size. The UART pins of the nRF52 DK are listed on the backside of the board. 
 2. Create the function uart_event_handler as shown below and add code that echoes the received data. 
 
 ```C
@@ -76,6 +81,8 @@ Copy the content of the folder to your computer and follow the instructions give
         }
     }
 ```
+The APP_UART_DATA_READY event will be generated for each single byte that is received by the nRF52, which 
+Most terminals append the `\n` character, also known as the Line Feed character, which indicates that the next character should be printed on a newline. 
 
 Hint: The function app_uart_put is used to place data in the UART's transmit buffer and must be called in a for-loop if more that one byte is to be sent, i.e. 
 ```C
@@ -84,10 +91,6 @@ Hint: The function app_uart_put is used to place data in the UART's transmit buf
         while (app_uart_put(data[i]) != NRF_SUCCESS);
     }
 ```
-
-
-
-
 
 
 
@@ -97,13 +100,15 @@ Hint: The function app_uart_put is used to place data in the UART's transmit buf
 Hint: Take a look at the temperature example in the SDK before you start modifying your template example.
 2. Send the temperature data to your terminal application using the UART. 
 
-Hint: The function app_uart_put is used to place data in the UART's transmit buffer and must be called in a for-loop if more that one byte is to be sent, i.e. 
+Hint 1: The function app_uart_put is used to place data in the UART's transmit buffer and must be called in a for-loop if more that one byte is to be sent, i.e. 
 ```C
     for (uint32_t i = 0; i < strlen((const char *)data); i++)
     {
         while (app_uart_put(data[i]) != NRF_SUCCESS);
     }
 ```
+Hint 2: Use [sprintf](https://www.tutorialspoint.com/c_standard_library/c_function_sprintf.htm) to copy the content of a string into an array.
+
 ## Hands-on Tasks - DAY 2
 
 ##Task 5: PWM Sweep
@@ -121,14 +126,10 @@ Orange: PWM Control Signal 	- Should be connected to one of the unused GPIO pins
 
 
 1.	Create the function pwm_init() where you initialize and enable the PWM peripheral.
-  * Hint: Use the pwm_library example in the SDK as a reference, you will find it in nRF5x_SDK_12.1\examples\peripheral\pwm_library\pca10040\blank\arm5_no_packs.
-2.	Include the necessary .c and .h files that are needed by the app_pwm library to the ble_app_uart example. 
-  * Hint: Drivers are found in nRF5x_SDK_12.1\components\drivers_nrf folder and Libraries are found in the nRF5x_SDK_12.1\components\libraries folder.
-3.	Make sure that the correct nRF_Drivers and nRF_Libraries are enabled in the sdk_config.h file. 
+  * Hint: Use the pwm_library example in the SDK as a reference, you will find it in nRF5x_SDK_12.2\examples\peripheral\pwm_library\pca10040\blank\arm5_no_packs.
+2.	Make sure that the correct nRF_Drivers and nRF_Libraries are enabled in the sdk_config.h file. 
   * Hint: Select the Configuration Wizard Tab in the bottom of the text window after opening sdk_config.h in the ble_app_uart example and compare it to the one in the pwm_library example.
-3.  Add commands in the uart_command enum for putting the servo in two different positions, e.g. SERVO_POS_1 and SERVO_POS_2. 
-4.	Configure two buttons in nRF Toolbox to send the commands to the nRF52 DK when pressed.
-5. 	Call app_pwm_channel_duty_set() to set the duty cycle when the commands are received.
+3. Call app_pwm_channel_duty_set() to set the duty cycle 
 
 Tips:
 * Period should be 20ms (20000us) and duty cycle should vary between 1-2ms (5-10%).
@@ -137,4 +138,4 @@ Tips:
 * while (app_pwm_channel_duty_set(&PWM1, 0, value) == NRF_ERROR_BUSY) makes sure that the code does not continue before the duty cycle is updated.
 
 ##Task 6: PWM & Buttons
-**Scope:** Modify the button handler from task 1 so that the servo   
+**Scope:** Modify the button handler from task 1 so that the servo is placed at its minimum angle angle by pressing button 3 and its maximum angle by pressing button   
