@@ -1,4 +1,3 @@
-# elektra
 Examples and tasks for the Elektra BLE course.
 -------
 
@@ -25,22 +24,48 @@ Copy the content of the folder to your computer and follow the instructions give
 
 ## Hands-on Tasks - DAY 1 
 
-The handson tasks for the first course day will cover 
+The hands-on tasks for the first course day will cover the use of the application timer library, the button handler library and the UART library. If you have some time left after finsihing the 3 first taske, then you may try to solve the optional Temperature Sensor task.
 
-As you progress through the tasks make sure that you enable the 
+If you have any compilation problems when using the function calls referred to in the task description then make sure that you enable the the correct modules in the skd_config.c file.
 
 ##Task 1: Application Timer
 **Scope:** Use an application timer to toggle one (or several) Leds on the nRF52 DK at a given interval. 
 
 1. Follow the [Application Timer Tutorial](https://devzone.nordicsemi.com/tutorials/19/) on DevZone to create a repeated timer.
 2. Create the functions `start_timer` and `stop_timer` that will be used to start and stop the application timer.  
-2. Turn on or toggle a led in the app_timer_timeout_handler using [nrf_gpio_pin_clear](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__nrf__gpio.html#ga5c671adfb6b44f32c9d99d3156aff2b1) or [nrf_gpio_pin_toggle](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__nrf__gpio.html#gac7f7bf539f5bb053b4a313ec51d8157e).
+2. Turn on or toggle a led in the app_timer_timeout_handler using [nrf_gpio_pin_clear](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__nrf__gpio.html#ga5c671adfb6b44f32c9d99d3156aff2b1) or [nrf_gpio_pin_toggle](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__nrf__gpio.html#gac7f7bf539f5bb053b4a313ec51d8157e). Note: The LEDs on the nRF52 are active low.
 
 ##Task 2: Button Handler
 **Scope:** Use the buttons on the nRF52 and the button handler library(app_button) to start and stop the application timer from Task 1. The button handler library is documented on [this](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__button.html?resultof=%22%62%75%74%74%6f%6e%22%20%22%68%61%6e%64%6c%65%72%22%20) Infocenter page. 
 
-1. Create a function called `button_init()`, where you configure the buttons you want to start and stop the application timer and enable the button handler module. Hint: The pins connected to the buttons will be short to ground when the buttons are pressed and should therefore be pulled to VDD when not pressed.
-2. Create the callback function `button_handler(uint8_t pin_no, uint8_t button_action)` that will be used check which button that was pressed and which action that should be assosiated with that button. 
+1. Create a function called `button_init()`, where you configure the buttons you want to start and stop the application timer and enable the button handler module. Hint: The pins connected to the buttons will be short to ground when the buttons are pressed and should therefore be pulled to VDD when not pressed. A button is configured using a app_button_cfg_t struct as shown below
+
+```C
+    static app_button_cfg_t button_config;
+    button_config.pin_no        = 1;
+    button_config.active_state  = APP_BUTTON_ACTIVE_LOW;
+    button_config.pull_cfg      = NRF_GPIO_PIN_PULLUP; 
+    button_config.button_handler = button_handler;
+```
+Since there are 4 buttons on the nRF52 DK you have to create an array that contains 4 of these structs, i.e. 
+
+```C
+   static app_button_cfg_t button_config[4]
+   button_config[0].pin_no        = 1;
+   ...
+```
+
+2. Create the callback function `button_handler(uint8_t pin_no, uint8_t button_action)` that will be called whenever a button is pressed or released. In this function you can check which button that was pressed and which action caused the callback, i.e. 
+
+```C
+   static void button_handler(uint8_t pin_no, uint8_t button_action)
+   {
+       if(pin_no == BUTTON_4 && button_action == APP_BUTTON_RELEASE)
+       {
+           \\ Do something if button 4 is released. 
+       }
+   }
+```
 3. Call the `start_timer`function from task 1 when Button 1 is pressed and `stop_timer`when button 2 is pressed. 
 
 
@@ -49,7 +74,7 @@ As you progress through the tasks make sure that you enable the
 **Scope:** Use the nRF52's UART peripheral and the UART library (app_uart) to echo data sent from a terminal. If you do not already have a favorite terminal application, then I recommend using [Termite] (http://www.compuphase.com/software_termite.htm). The UART library is documented on [this](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__uart.html?resultof=%22%41%50%50%5f%55%41%52%54%5f%46%49%46%4f%5f%49%4e%49%54%22%20) Infocenter page. 
 
 1. Create the function uart_init where you use the APP_UART_FIFO_INIT macro to initialize the UART module.
-   The baudrate should be set to 115200, Flow Control should be disabled, no parity bits are used and the RX and TX buffers should be      set to 256 in size. The UART pins of the nRF52 DK are listed on the backside of the board. 
+   The baudrate should be set to 115200, Flow Control should be disabled, no parity bits are used and the RX and TX buffers should be      set to 256 in size. The UART pins of the nRF52 DK are listed on the backside of the board. See the UART example in the              \examples\peripheral\uart\pca10040\blank\arm5_no_packs folder
 2. Create the function uart_event_handler as shown below and add code that echoes the received data. 
 
 ```C
@@ -92,9 +117,7 @@ Hint: The function app_uart_put is used to place data in the UART's transmit buf
     }
 ```
 
-
-
-##Task 4: Temperature Sensor 
+##Task 4: Temperature Sensor (Optional)
 **Scope:** Use the die temperature sensor on the nRF52 to measure the temperature in the room. 
 1 . Create the function read_temperature() that returns the die temperature as a int32_t.
 Hint: Take a look at the temperature example in the SDK before you start modifying your template example.
@@ -138,4 +161,4 @@ Tips:
 * while (app_pwm_channel_duty_set(&PWM1, 0, value) == NRF_ERROR_BUSY) makes sure that the code does not continue before the duty cycle is updated.
 
 ##Task 6: PWM & Buttons
-**Scope:** Modify the button handler from task 1 so that the servo is placed at its minimum angle angle by pressing button 3 and its maximum angle by pressing button   
+**Scope:** Modify the button handler from task 1 so that the servo is placed at its minimum angle angle by pressing button 3 and its maximum angle by pressing button 4.  
