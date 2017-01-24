@@ -675,11 +675,11 @@ void uart_command_handler(uart_command_t * m_command)
             break;
         
         case SERVO_POS_1:
-            //while (app_pwm_channel_duty_set(&PWM1, 0, 5) == NRF_ERROR_BUSY);
+            while (app_pwm_channel_duty_set(&PWM1, 0, 5) == NRF_ERROR_BUSY);
             break;
         
         case SERVO_POS_2:
-            // while (app_pwm_channel_duty_set(&PWM1, 0, 10) == NRF_ERROR_BUSY);
+             while (app_pwm_channel_duty_set(&PWM1, 0, 10) == NRF_ERROR_BUSY);
             break;   
         case NO_COMMAND:
             
@@ -695,28 +695,20 @@ void uart_command_handler(uart_command_t * m_command)
 
 static void pwm_init()
 {
-    //uint32_t pins[APP_PWM_CHANNELS_PER_INSTANCE] = {4, APP_PWM_NOPIN};
-    //app_pwm_polarity_t pin_polarity[APP_PWM_CHANNELS_PER_INSTANCE] = {APP_PWM_POLARITY_ACTIVE_HIGH,APP_PWM_POLARITY_ACTIVE_HIGH};
-    
     app_pwm_config_t pwm_config = {
         .pins               = {4, APP_PWM_NOPIN},
         .pin_polarity       = {APP_PWM_POLARITY_ACTIVE_HIGH, APP_PWM_POLARITY_ACTIVE_LOW}, 
         .num_of_channels    = 1,                                                          
         .period_us          = 20000L                                                
     };
-    
-    //pwm_config.pin_polarity[0]  = APP_PWM_POLARITY_ACTIVE_HIGH;
-
+   
     /* Initialize and enable PWM. */
     uint32_t err_code;
     err_code = app_pwm_init(&PWM1,&pwm_config,NULL);
     APP_ERROR_CHECK(err_code);
     
     app_pwm_enable(&PWM1);
-    
-    //ready_flag = true;
-    //while (!ready_flag);
-    //APP_ERROR_CHECK(app_pwm_channel_duty_set(&PWM1, 0, 10));
+
 }
 
 /**@brief Application main function.
@@ -746,13 +738,8 @@ int main(void)
     // Enter main loop.
     for (;;)
     {
-        while (app_pwm_channel_duty_set(&PWM1, 0, 5) == NRF_ERROR_BUSY);
-        nrf_delay_ms(1000);
-        while (app_pwm_channel_duty_set(&PWM1, 0, 10) == NRF_ERROR_BUSY); // Do nothing.
-        nrf_delay_ms(1000);
-        //uart_command_handler(&m_command);
-        //nrf_delay_ms(1000);
-        //power_manage();
+        uart_command_handler(&m_command);
+        power_manage();
     }
 }
 
