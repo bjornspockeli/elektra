@@ -137,13 +137,52 @@ Most terminals append the `\n` character, also known as the Line Feed character,
   }
 ```
 
-Hint: The function app_uart_put used to place data in the UART's transmit buffer must be called in a for-loop if more that one byte is to be sent, i.e. 
+The function app_uart_put used to place data in the UART's transmit buffer must be called in a for-loop if more that one byte is to be sent, i.e. 
 ```C
     for (uint32_t i = 0; i < strlen((const char *)data_array); i++)
     {
         while (app_uart_put(data_array[i]) != NRF_SUCCESS);
     }
 ```
+After adding the array to hold the data and the index to keep track of hom many bytes we have received, adding the if statment and the for loop that calls app_uart_put(), the uart_event_handler function should look something like this:
+
+```C
+    void uart_event_handler(app_uart_evt_t * p_event)
+    {
+        static uint8_t data_array[32];
+        static uint8_t index = 0;
+
+        switch (p_event->evt_type)
+        {
+            case APP_UART_DATA_READY:
+                app_uart_get(&data_array[index]);
+                index++;
+
+                if (data_array[index - 1] == '\n') 
+                {
+                    for (uint32_t i = 0; i < strlen((const char *)data_array); i++)
+                    {
+                        while (app_uart_put(data_array[i]) != NRF_SUCCESS);
+                    }
+                    memset(data_array,0,sizeof(data_array));
+                    index = 0;
+                }
+                break;
+
+            case APP_UART_COMMUNICATION_ERROR:
+                APP_ERROR_HANDLER(p_event->data.error_communication);
+                break;
+
+            case APP_UART_FIFO_ERROR:
+                APP_ERROR_HANDLER(p_event->data.error_code);
+                break;
+
+            default:
+                break;
+        }
+    }
+```
+The memset function is used to clear the data_array since it is decleared as static, i.e. it will not erase the content in between the calls to `uart_event_handler`. If we do not set data_array to 0 and receive a string that is shorter than the last string we received, then some of the old data will still be stored in the array.
 
 ##Task 4: Temperature Sensor (Optional)
 **Scope:** Use the die temperature sensor on the nRF52 to measure the temperature in the room. 
