@@ -44,7 +44,7 @@ Note: The LEDs on the nRF52 are active low.
 ##Task 2: Button Handler
 **Scope:** Use the buttons on the nRF52 and the button handler library(app_button) to start and stop the application timer from Task 1. The button handler library is documented on [this](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__button.html?resultof=%22%62%75%74%74%6f%6e%22%20%22%68%61%6e%64%6c%65%72%22%20) Infocenter page. 
 
-1. Create a function called `button_init()`, where you configure the buttons you want to start and stop the application timer and enable the button handler module. Hint: The pins connected to the buttons will be short to ground when the buttons are pressed and should therefore be pulled to VDD when not pressed. A button is configured using a app_button_cfg_t struct as shown below
+1.Create a function called `button_init()`, where you configure the buttons you want to start and stop the application timer and enable the button handler module. Hint: The pins connected to the buttons will be short to ground when the buttons are pressed and should therefore be pulled to VDD when not pressed. A button is configured using a app_button_cfg_t struct as shown below
 
 ```C
     static app_button_cfg_t button_config;
@@ -72,7 +72,7 @@ Since there are 4 buttons on the nRF52 DK you have to create an array that conta
 After creating the app_button_cfg_t button_config[4] array, you have to call [app_button_init](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__button.html#ga5948c3d8e3e385820dc7d8df0976e8eb) and [app_button_enable](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__button.html#gab498b436a38ebb03393e1129a6daffc9)
 in that order.
 
-2. Create the callback function `button_handler(uint8_t pin_no, uint8_t button_action)` that will be called whenever a button is pressed or released. In this function you can check which button that was pressed and which action caused the callback, i.e. 
+2.Create the callback function `button_handler(uint8_t pin_no, uint8_t button_action)` that will be called whenever a button is pressed or released. In this function you can check which button that was pressed and which action caused the callback, i.e. 
 
 ```C
    static void button_handler(uint8_t pin_no, uint8_t button_action)
@@ -83,7 +83,7 @@ in that order.
        }
    }
 ```
-3. Call the `start_timer`function from task 1 when Button 1 is pressed and `stop_timer`when button 2 is pressed. 
+3.Call the `start_timer`function from task 1 when Button 1 is pressed and `stop_timer`when button 2 is pressed. 
 
 
 
