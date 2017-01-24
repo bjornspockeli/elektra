@@ -162,10 +162,12 @@ Hint 1: The function app_uart_put is used to place data in the UART's transmit b
 ```
 Hint 2: Use [sprintf](https://www.tutorialspoint.com/c_standard_library/c_function_sprintf.htm) to copy the content of a string into an array.
 
-## Hands-on Tasks - DAY 2
+## Hands-on Tasks - Day 2
+
+Task 5 and Task 6 are non-BLE tasks and should be done in the template_project example used on Day 1. Task 7 and upwards are BLE task and should be done in the ble_app_uart example.
 
 ##Task 5: PWM Sweep
-**Scope:** In this task we will use the PWM library in the nRF5x SDK to control a servo.
+**Scope:** In this task we will use the PWM library in the nRF5x SDK to control a servo. The PWM library uses one of the nRF52s TIMER peripherals in addition to the PPI and GPIOTE peripherals. The app_pwm library is documented on [this](https://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/lib_pwm.html?resultof=%22%61%70%70%5f%70%77%6d%5f%69%6e%69%74%22%20) Infocenter page
 
 Connecting the Servo to your nRF52 DK:
 
@@ -175,20 +177,62 @@ Brown: 	Ground 				- Should be connected to one of the pins marked GND on your n
 
 Red: 	5V 					- Should be connected to the pin marked 5V on your nRF52 DK.
 
-Orange: PWM Control Signal 	- Should be connected to one of the unused GPIO pins of the nRF52 DK (for example P0.11, pin number 11).
+Orange: PWM Control Signal 	- Should be connected to one of the unused GPIO pins of the nRF52 DK (for example P0.4, pin number 4).
 
+1. The first thing we have to do is to include the header to the PWM library, `app_pwm.h` and create a PWM instance using the TIMER1 peripheral. This is done as shown below 
 
-1.	Create the function pwm_init() where you initialize and enable the PWM peripheral.
-  * Hint: Use the pwm_library example in the SDK as a reference, you will find it in nRF5x_SDK_12.2\examples\peripheral\pwm_library\pca10040\blank\arm5_no_packs.
-2.	Make sure that the correct nRF_Drivers and nRF_Libraries are enabled in the sdk_config.h file. 
-  * Hint: Select the Configuration Wizard Tab in the bottom of the text window after opening sdk_config.h in the ble_app_uart example and compare it to the one in the pwm_library example.
-3. Call app_pwm_channel_duty_set() to set the duty cycle 
+```C
+    #include "app_pwm.h"
+    
+    APP_PWM_INSTANCE(PWM1,1);                       // Create the instance "PWM1" using TIMER1.
+```
+2.	The second thing we have to do is creating the function `pwm_init()` where we configure, initialize and enable the PWM peripheral. You configure the pwm library by creating a app_pwm_config_t struct like shown below
+
+```C
+    app_pwm_config_t pwm_config = {
+        .pins               = {4, APP_PWM_NOPIN},
+        .pin_polarity       = {APP_PWM_POLARITY_ACTIVE_HIGH, APP_PWM_POLARITY_ACTIVE_LOW}, 
+        .num_of_channels    = 1,                                                          
+        .period_us          = 20000L                                                
+    };
+```
+This struct contains the information about which pins that are used as PWM pins, which polarity the pisn should have, how many channels(the number of PWM outputs, this is limited to 2 per PWM instance) and the period of the PWM signal. The struct is given as an input to the [app_pwm_init](https://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__pwm.html#gae3b3e1d5404fd776bbf7bf22224b4b0d) function which initializes the PWM library. 
+
+```C
+    uint32_t err_code;
+    err_code = app_pwm_init(&PWM1,&pwm_config,NULL);
+    APP_ERROR_CHECK(err_code);
+```
+
+You can initialize the PWM library with a callback function that is called when duty cycle change process is finsihed, but this is not necessary for this example so we'll just pass NULL as an argument. After initializng the PWM library you have to enable the PWM instance by calling [app_pwm_enable](https://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__pwm.html#ga94f5d824afec86aff163f7cccedaa436).
+
+```C
+    app_pwm_enable(&PWM1);
+```
+The pwm_init() function is now finished and can add it to the `main()` function before the infinite for-loop.
+
+3. Now that we have initialized the PWM library its time to set the duty cycle of the PWM signal to the servo using the  [app_pwm_channel_duty_set](https://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__pwm.html#ga071ee86851d8c0845f297df5d23a240d) function. This will set the duty cycle of the PWM signal, i.e. the percentage of the total time the signal is high or low depending on the polarity that has been chosen. If we want to set the PWM signal to be high 50% of the time, then we call `app_pwm_channel_duty_set` with the following parameters.
+
+```C
+    while (app_pwm_channel_duty_set(&PWM1, 0, 50) == NRF_ERROR_BUSY)
+```
+The `app_pwm_channel_duty_set` function should be called until it does not return `NRF_ERROR_BUSY` in order to make sure that the duty cycle is correctly set. 
+
+4. The goal of this task was to make the servo sweep from its maximum angle to its minimum angle. This can be done by calling app_pwm_channel_duty_set twice with a delay between the two calls in the main while-loop.
+
+```C
+    while (true)
+    {
+        while (app_pwm_channel_duty_set(&PWM1, 0, duty_cycle) == NRF_ERROR_BUSY)
+        nrf_delay_ms(1000);
+        while (app_pwm_channel_duty_set(&PWM1, 0, duty_cycle) == NRF_ERROR_BUSY)
+    }
+    
+```
+The code snippet above sets the duty cycle to 0, you have to figure out the correct duty cycle values for the min and max angle. 
 
 Tips:
-* Period should be 20ms (20000us) and duty cycle should vary between 1-2ms (5-10%).
-* If the polarity is ‘APP_PWM_POLARITY_ACTIVE_HIGH’, the duty cycle set will tell how long the pulse is high.
-* app_pwm_channel_duty_set(&PWM1, 0, value) will set the duty cycle of channel 0 to ‘value’ percent.
-* while (app_pwm_channel_duty_set(&PWM1, 0, value) == NRF_ERROR_BUSY) makes sure that the code does not continue before the duty cycle is updated.
+* Period should be 20ms (20000us) and duty cycle  for the min and max angle corresponds to 1ms and 2ms respectivly.
 
 ##Task 6: PWM & Buttons
 **Scope:** Modify the button handler from task 1 so that the servo is placed at its minimum angle angle by pressing button 3 and its maximum angle by pressing button 4.  
@@ -196,16 +240,19 @@ Tips:
 ##Task 7: Control LEDs using the nRF Toolbox App
 **Scope:** Modify the ble_app_uart example to recognise specific commands sent from the nRF Toolbox app and turn on a LED when one of these commands are received.
 
-1. Open the ble_app_uart example found in the nRF5_SDK_12.2.0\examples\ble_peripheral\ble_app_uart\pca10040\s132\arm5_no_packs folder.
+1. Open the ble_app_uart example found in the nRF5_SDK_12.2.0\examples\ble_peripheral\ble_app_uart\pca10040\s132\arm5_no_packs folder. Find the `DEVICE_NAME` define and change the device to a unique name that is easily recognisable, for example.
+```C   
+    #define DEVICE_NAME                     "Bjoern_UART"       
+``` 
 
 2. We need a variable to keep track of the current command that the nRF52 should handle. We can do this by creating an enumeration, which is basically a list of commands that are assigned a number from 0 and upwards. We create an enumeration  like this
 ```C    
-    typedef enum {
-        COMMAND_1,
-        COMMAND_2,
-        COMMAND_3,
-        NO_COMMAND
-    } uart_command_t;
+typedef enum {
+    COMMAND_1,
+    COMMAND_2,
+    COMMAND_3,
+    NO_COMMAND
+} uart_command_t;
 ```
 Every variable of the uart_command_t type can be set to one of the commands in the list.  We've  added a `NO_COMMAND` command which is going to be the default state when no command has been received or the last command has been completed. After declaring the enumeration type `uart_command_t` we need to create a variable `m_command` of the `uart_command_t` type and initialize it to `NO_COMMAND`, i.e.
 
@@ -299,14 +346,24 @@ We also have to configure the pin connected to LED_4 as an output so make sure t
 
 7. Compile the project and flash it to the nRF52 DK. Make sure that you've also flashed the S132 v3.0 SoftDevice to your board. LED 1 on the nRF52 DK should start blinking, indicating that its advertising.  We've now completed the configuration on the nRF52 side  
 
-8. Install the nRF Toolbox app on you Android/iOS phone. You can find the app [here](https://www.nordicsemi.com/eng/Products/Nordic-mobile-Apps/nRF-Toolbox-App) on Google Play Store and [here](https://itunes.apple.com/us/app/nrf-toolbox/id820906058?mt=8) on Apple App Store. Open the nRF Toolbox app and click the UART symbol.  
+8. Install the nRF Toolbox app on you Android/iOS phone. You can find the app [here](https://www.nordicsemi.com/eng/Products/Nordic-mobile-Apps/nRF-Toolbox-App) on Google Play Store and [here](https://itunes.apple.com/us/app/nrf-toolbox/id820906058?mt=8) on Apple App Store. Open the nRF Toolbox app and click the UART symbol, which should display the picture under "UART Menu". Press EDIT in the top right corner, the menu should now turn orange and then press the top-left square in the 3x3 matrix. The app should now display the same image as shown under "Edit Button Menu". Enter the command shown in the "Configure Command 1" and select 1 as the icon. After pressing OK you should see return to the orange edit screen shown under "Edit Mode". Press "DONE" in the top-right corner and you should return to the blue UART menu as shown under "Edit Complete".  
 
 
-<!--- ![Image of nRF Toolbox](https://github.com/bjornspockeli/elektra/blob/master/images/nrf_toolbox.png | width=100) --->
-<img src="https://github.com/bjornspockeli/elektra/blob/master/images/nrf_toolbox.png" width="250">
+
+nRF Toolbox Menu  | UART Menu     | Edit Button Menu| Configure Command 1 | Edit Mode | Edit Completed |
+------------ | ------------- | ------------  | ------------  | ------------  | ------------  |
+<img src="https://github.com/bjornspockeli/elektra/blob/master/images/nrf_toolbox.png" width="200"> | <img src="https://github.com/bjornspockeli/elektra/blob/master/images/default.png" width="200"> | <img src="https://github.com/bjornspockeli/elektra/blob/master/images/edit.png" width="200"> | <img src="https://github.com/bjornspockeli/elektra/blob/master/images/command_1.png" width="200"> | <img src="https://github.com/bjornspockeli/elektra/blob/master/images/edit_done.png" width="200"> | <img src="https://github.com/bjornspockeli/elektra/blob/master/images/done.png" width="200">
+
+9. Press the Connect button, this should bring up a list of nearby BLE devices. Select the device with the name you assigned in step 1 of this task. It should be the one of the devices with the strongest signal. LED 1 on your nRF52 DK should now stop blinking and stay lit, indicating that its in a connected state. 
+
+<img src="https://github.com/bjornspockeli/elektra/blob/master/images/device_list.png" width="200">
+
+10. Pressing the button we configured to send "COMMAND_1" to the nRF52 DK should turn on LED 4 on the nRF52 DK. Pressing it again should turn it off. Congratulations, you've just controlled one of the GPIO pins of the nRF52 using Bluetooth Low Energy.
 
 ##Task 8: Control the Servo using the nRF Toolbox App
 **Scope:** 
+
+Make sure that the correct nRF_Drivers and nRF_Libraries are enabled in the sdk_config.h file. If you're having compilation issues and/or linker errors then select the Configuration Wizard Tab in the bottom of the text window after opening `sdk_config.h` in the ble_app_uart example and compare it to the one in the pwm_library example.
 
 ##Task 9: Control the Servo using the nRF Toolbox App
 **Scope:** 
