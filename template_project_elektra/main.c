@@ -45,7 +45,7 @@
 APP_TIMER_DEF(m_led_a_timer_id);                // Create 
 APP_PWM_INSTANCE(PWM1,1);                       // Create the instance "PWM1" using TIMER1.
 
-static volatile bool ready_flag;                // A flag indicating PWM status.
+//static volatile bool ready_flag;                // A flag indicating PWM status.
 
 // Function starting the internal LFCLK oscillator.
 // This is needed by RTC1 which is used by the application timer
@@ -242,22 +242,31 @@ static void button_init()
     err_code = app_button_enable();
     APP_ERROR_CHECK(err_code);
 }
-
+/*
 void pwm_ready_callback(uint32_t pwm_id)    // PWM callback function
 {
     ready_flag = true;
 }
-
+*/
 static void pwm_init()
 {
-    app_pwm_config_t pwm_config = APP_PWM_DEFAULT_CONFIG_1CH(20000L, 4);
+    //uint32_t pins[APP_PWM_CHANNELS_PER_INSTANCE] = {4, APP_PWM_NOPIN};
+    //app_pwm_polarity_t pin_polarity[APP_PWM_CHANNELS_PER_INSTANCE] = {APP_PWM_POLARITY_ACTIVE_HIGH,APP_PWM_POLARITY_ACTIVE_HIGH};
     
-    pwm_config.pin_polarity[0]  = APP_PWM_POLARITY_ACTIVE_HIGH;
+    app_pwm_config_t pwm_config = {
+        .pins               = {4, APP_PWM_NOPIN},
+        .pin_polarity       = {APP_PWM_POLARITY_ACTIVE_HIGH, APP_PWM_POLARITY_ACTIVE_LOW}, 
+        .num_of_channels    = 1,                                                          
+        .period_us          = 20000L                                                
+    };
+    
+    //pwm_config.pin_polarity[0]  = APP_PWM_POLARITY_ACTIVE_HIGH;
 
     /* Initialize and enable PWM. */
     uint32_t err_code;
-    err_code = app_pwm_init(&PWM1,&pwm_config,pwm_ready_callback);
+    err_code = app_pwm_init(&PWM1,&pwm_config,NULL);
     APP_ERROR_CHECK(err_code);
+    
     app_pwm_enable(&PWM1);
     
     //ready_flag = true;
@@ -321,7 +330,9 @@ int main(void)
 
     while (true)
     {
-        // Do nothing.
+        while (app_pwm_channel_duty_set(&PWM1, 0, 5) == NRF_ERROR_BUSY);
+        nrf_delay_ms(1000);
+        while (app_pwm_channel_duty_set(&PWM1, 0, 10) == NRF_ERROR_BUSY); // Do nothing.
     }
 }
 /** @} */

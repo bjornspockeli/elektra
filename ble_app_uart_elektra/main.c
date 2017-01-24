@@ -38,6 +38,10 @@
 #include "bsp.h"
 #include "bsp_btn_ble.h"
 #include "nrf_delay.h"
+#include "app_pwm.h"
+
+APP_PWM_INSTANCE(PWM1,1);                       // Create the instance "PWM1" using TIMER1.
+
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include the service_changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device. */
 
@@ -50,7 +54,7 @@
 #define CENTRAL_LINK_COUNT              0                                           /**< Number of central links used by the application. When changing this number remember to adjust the RAM settings*/
 #define PERIPHERAL_LINK_COUNT           1                                           /**< Number of peripheral links used by the application. When changing this number remember to adjust the RAM settings*/
 
-#define DEVICE_NAME                     "Nordic_UART"                               /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                     "Bjoern_UART"                               /**< Name of device. Will be included in the advertising data. */
 #define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
 #define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
@@ -635,18 +639,18 @@ static void power_manage(void)
 }
 
 
-void uart_command_handler(uart_command_t * command)
+void uart_command_handler(uart_command_t * m_command)
 {
     uint32_t err_code = NRF_SUCCESS;
    
-    switch(*command)
+    switch(*m_command)
     {
         case COMMAND_1:
             printf("Command 1 received!\r\n");
             //err_code = bsp_indication_set(BSP_INDICATE_USER_STATE_1);
             nrf_gpio_pin_toggle(LED_4);
-            *command = NO_COMMAND;
-            printf("Current command: %d\r\n", *command);
+            *m_command = NO_COMMAND;
+            printf("Current command: %d\r\n", *m_command);
             // Put Action to COMMAND_1 here.
             break;
         
@@ -684,9 +688,35 @@ void uart_command_handler(uart_command_t * command)
             break;
     }
     /* Reset the command variable to NO_COMMAND */
-    *command = NO_COMMAND;
+    *m_command = NO_COMMAND;
     
     APP_ERROR_CHECK(err_code);
+}
+
+static void pwm_init()
+{
+    //uint32_t pins[APP_PWM_CHANNELS_PER_INSTANCE] = {4, APP_PWM_NOPIN};
+    //app_pwm_polarity_t pin_polarity[APP_PWM_CHANNELS_PER_INSTANCE] = {APP_PWM_POLARITY_ACTIVE_HIGH,APP_PWM_POLARITY_ACTIVE_HIGH};
+    
+    app_pwm_config_t pwm_config = {
+        .pins               = {4, APP_PWM_NOPIN},
+        .pin_polarity       = {APP_PWM_POLARITY_ACTIVE_HIGH, APP_PWM_POLARITY_ACTIVE_LOW}, 
+        .num_of_channels    = 1,                                                          
+        .period_us          = 20000L                                                
+    };
+    
+    //pwm_config.pin_polarity[0]  = APP_PWM_POLARITY_ACTIVE_HIGH;
+
+    /* Initialize and enable PWM. */
+    uint32_t err_code;
+    err_code = app_pwm_init(&PWM1,&pwm_config,NULL);
+    APP_ERROR_CHECK(err_code);
+    
+    app_pwm_enable(&PWM1);
+    
+    //ready_flag = true;
+    //while (!ready_flag);
+    //APP_ERROR_CHECK(app_pwm_channel_duty_set(&PWM1, 0, 10));
 }
 
 /**@brief Application main function.
@@ -699,6 +729,7 @@ int main(void)
     // Initialize.
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
     uart_init();
+    pwm_init();
 
     buttons_leds_init(&erase_bonds);
     ble_stack_init();
@@ -710,13 +741,18 @@ int main(void)
     printf("\r\nUART Start!\r\n");
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
-
+    
+  
     // Enter main loop.
     for (;;)
     {
-        uart_command_handler(&m_command);
+        while (app_pwm_channel_duty_set(&PWM1, 0, 5) == NRF_ERROR_BUSY);
+        nrf_delay_ms(1000);
+        while (app_pwm_channel_duty_set(&PWM1, 0, 10) == NRF_ERROR_BUSY); // Do nothing.
+        nrf_delay_ms(1000);
+        //uart_command_handler(&m_command);
         //nrf_delay_ms(1000);
-        power_manage();
+        //power_manage();
     }
 }
 
