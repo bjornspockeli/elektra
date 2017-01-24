@@ -37,6 +37,7 @@
 #include "app_util_platform.h"
 #include "bsp.h"
 #include "bsp_btn_ble.h"
+#include "nrf_delay.h"
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include the service_changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device. */
 
@@ -77,7 +78,7 @@ static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;
 static ble_uuid_t                       m_adv_uuids[] = {{BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}};  /**< Universally unique service identifier. */
 
 typedef enum {
-    COMMAND_1,
+    COMMAND_1 = 0,
     APP_TIMER_START,
     APP_TIMER_STOP,
     TEMP_TIMER_START,
@@ -87,7 +88,7 @@ typedef enum {
     NO_COMMAND
 } uart_command_t;
 
-static volatile uart_command_t command = NO_COMMAND;
+uart_command_t m_command = NO_COMMAND;
 
 
 /**@brief Function for assert macro callback.
@@ -152,38 +153,40 @@ static void nus_data_handler(ble_nus_t * p_nus, uint8_t * p_data, uint16_t lengt
     static char uart_string[BLE_NUS_MAX_DATA_LEN];
     memcpy( uart_string, p_data, length);
 
-    if(!strcmp(uart_string,"COMMAND1"))
+    if(strcmp(uart_string,"COMMAND_1") == 0)
     {
-        command = COMMAND_1;
+        m_command = COMMAND_1;    
     }
-    else if(!strcmp(uart_string,"APP_TIMER_START"))
+    else if(strcmp(uart_string,"APP_TIMER_START")== 0)
     {
-        command = APP_TIMER_START;
+        m_command = APP_TIMER_START;
     }
-    else if(!strcmp(uart_string,"APP_TIMER_STOP"))
+    else if(strcmp(uart_string,"APP_TIMER_STOP")== 0)
     {
-        command = APP_TIMER_STOP;
+        m_command = APP_TIMER_STOP;
     }
-    else if(!strcmp(uart_string,"TEMP_TIMER_START"))
+    else if(strcmp(uart_string,"TEMP_TIMER_START")== 0)
     {
-        command = TEMP_TIMER_START;
+        m_command = TEMP_TIMER_START;
     }
-    else if(!strcmp(uart_string,"TEMP_TIMER_STOP"))
+    else if(strcmp(uart_string,"TEMP_TIMER_STOP")== 0)
     {
-        command = TEMP_TIMER_STOP;
+        m_command = TEMP_TIMER_STOP;
     }
-    else if(!strcmp(uart_string,"SERVO_POS_1"))
+    else if(strcmp(uart_string,"SERVO_POS_1")== 0)
     {
-        command = SERVO_POS_1;
+        m_command = SERVO_POS_1;
     }
-    else if(!strcmp(uart_string,"SERVO_POS_2"))
+    else if(strcmp(uart_string,"SERVO_POS_2")== 0)
     {
-        command = SERVO_POS_2;
+        m_command = SERVO_POS_2;
     }
     else
     {
-        command = NO_COMMAND;
+        m_command = NO_COMMAND;
     }
+     printf("Command on exit nus data handler : %d\r\n", m_command);
+    
     for (uint32_t i = 0; i < length; i++)
     {
         while (app_uart_put(p_data[i]) != NRF_SUCCESS);
@@ -632,49 +635,56 @@ static void power_manage(void)
 }
 
 
-void uart_command_handler(uart_command_t  command)
+void uart_command_handler(uart_command_t * command)
 {
     uint32_t err_code = NRF_SUCCESS;
-    //printf("Current command: %d\r\n", command);
-    switch(command)
+   
+    switch(*command)
     {
         case COMMAND_1:
             printf("Command 1 received!\r\n");
             //err_code = bsp_indication_set(BSP_INDICATE_USER_STATE_1);
             nrf_gpio_pin_toggle(LED_4);
-            command = NO_COMMAND;
-            printf("Current command: %d\r\n", command);
+            *command = NO_COMMAND;
+            printf("Current command: %d\r\n", *command);
             // Put Action to COMMAND_1 here.
             break;
+        
         case APP_TIMER_START:
             //err_code = app_timer_start(app_timer_id, APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER), NULL);
             APP_ERROR_CHECK(err_code);
             break;
+        
         case APP_TIMER_STOP:
             //err_code = app_timer_stop(app_timer_id);
             APP_ERROR_CHECK(err_code);
             break;
+        
         case TEMP_TIMER_START:
             //err_code = app_timer_start(temp_timer_id, APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER), NULL);
             APP_ERROR_CHECK(err_code);
             break;
+        
         case TEMP_TIMER_STOP:
             //err_code = app_timer_stop(temp_timer_id);
             APP_ERROR_CHECK(err_code);
             break;
+        
         case SERVO_POS_1:
             //while (app_pwm_channel_duty_set(&PWM1, 0, 5) == NRF_ERROR_BUSY);
             break;
+        
         case SERVO_POS_2:
             // while (app_pwm_channel_duty_set(&PWM1, 0, 10) == NRF_ERROR_BUSY);
             break;   
         case NO_COMMAND:
+            
         default:
             // Invalid command -> Do nothing.
             break;
     }
     /* Reset the command variable to NO_COMMAND */
-    command = NO_COMMAND;
+    *command = NO_COMMAND;
     
     APP_ERROR_CHECK(err_code);
 }
@@ -704,7 +714,8 @@ int main(void)
     // Enter main loop.
     for (;;)
     {
-        uart_command_handler(command);
+        uart_command_handler(&m_command);
+        //nrf_delay_ms(1000);
         power_manage();
     }
 }

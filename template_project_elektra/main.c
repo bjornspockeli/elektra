@@ -218,7 +218,7 @@ static void button_init()
     static app_button_cfg_t button_config[4];
     button_config[0].pin_no        = BUTTON_1;
     button_config[0].active_state  = APP_BUTTON_ACTIVE_LOW;
-    button_config[0].pull_cfg      = NRF_GPIO_PIN_PULLUP; //
+    button_config[0].pull_cfg      = NRF_GPIO_PIN_PULLUP; 
     button_config[0].button_handler = button_handler;
     
     button_config[1].pin_no        = BUTTON_2;
@@ -283,7 +283,7 @@ int main(void)
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
     
     create_timer();
-    //start_timer();
+    start_timer();
     
  /** APP TIMER TASK CODE END */
     
