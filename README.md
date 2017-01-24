@@ -318,11 +318,11 @@ Every variable of the uart_command_t type can be set to one of the commands in t
     {
         m_command = COMMAND_1;    
     }
-    else if(!strcmp(uart_string,"COMMAND_2") == 0 )
+    else if(strcmp(uart_string,"COMMAND_2") == 0 )
     {
         m_command = COMMAND_2;
     }
-    else if(!strcmp(uart_string,"COMMAND_3") == 0)
+    else if(strcmp(uart_string,"COMMAND_3") == 0)
     {
         m_command = COMMAND_3;
     }
