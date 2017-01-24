@@ -225,6 +225,7 @@ The `app_pwm_channel_duty_set` function should be called until it does not retur
         while (app_pwm_channel_duty_set(&PWM1, 0, duty_cycle) == NRF_ERROR_BUSY)
         nrf_delay_ms(1000);
         while (app_pwm_channel_duty_set(&PWM1, 0, duty_cycle) == NRF_ERROR_BUSY)
+        nrf_delay_ms(1000);
     }
     
 ```
@@ -237,6 +238,9 @@ Tips:
 **Scope:** Modify the button handler from task 1 so that the servo is placed at its minimum angle angle by pressing button 3 and its maximum angle by pressing button 4.  
 
 ##Task 7: Control LEDs using the nRF Toolbox App
+
+**This task is a _BLUETOOTH TASK_!**
+
 **Scope:** Modify the ble_app_uart example to recognise specific commands sent from the nRF Toolbox app and turn on a LED when one of these commands are received.
 
 1 - Open the ble_app_uart example found in the nRF5_SDK_12.2.0\examples\ble_peripheral\ble_app_uart\pca10040\s132\arm5_no_packs folder. Find the `DEVICE_NAME` define and change the device to a unique name that is easily recognisable, for example.
@@ -360,9 +364,33 @@ nRF Toolbox Menu  | UART Menu     | Edit Button Menu| Configure Command 1 | Edit
 10 - Pressing the button we configured to send "COMMAND_1" to the nRF52 DK should turn on LED 4 on the nRF52 DK. Pressing it again should turn it off. Congratulations, you've just controlled one of the GPIO pins of the nRF52 using Bluetooth Low Energy.
 
 ##Task 8: Control the Servo using the nRF Toolbox App
-**Scope:** 
+**Scope:** The goal of this task is to include the PWM library in the ble_app_uart example so that we can control the servo from our smartphone instead of using the buttons on the nRF52 DK. 
 
-Make sure that the correct nRF_Drivers and nRF_Libraries are enabled in the sdk_config.h file. If you're having compilation issues and/or linker errors then select the Configuration Wizard Tab in the bottom of the text window after opening `sdk_config.h` in the ble_app_uart example and compare it to the one in the pwm_library example.
 
-##Task 9: Control the Servo using the nRF Toolbox App
+1 - The files used by the app_pwm library were already included in the template_project, but in the ble_app_uart project you have to add the necessary .c and .h files to the project. The app_pwm library uses the following files
+
+* `app_pwm.h`
+* `app_pwm.c`
+* `nrf_drv_ppi.c`
+* `nrf_drv_timer.c`
+Adding .h files  | Adding .c files
+------------ | -------------
+<img src="https://github.com/bjornspockeli/elektra/blob/master/images/include_path.png" width="200"> | <img src="https://github.com/bjornspockeli/elektra/blob/master/images/add_c_files.png" width="200">
+
+You also have to make sure that the correct nRF_Drivers and nRF_Libraries are enabled in the sdk_config.h file. If you're having compilation issues and/or linker errors then select the Configuration Wizard Tab in the bottom of the text window after opening `sdk_config.h` in the ble_app_uart example and compare it to the one in the pwm_library example.
+
+src="https://github.com/bjornspockeli/elektra/blob/master/images/sdk_config.png" width="200">
+
+Under nRF_Libraries the following boxes must be checked
+
+* APP_PWM_ENABLED
+
+Under nRF_Drivers the following boxes must be checked
+* PPI_ENABLED
+* TIMER_ENABLED
+    * TIMER1_ENABLED
+
+
+
+##Task 9: Measure the die temperature of the nRF52 and send it to the nRF Toolbox app.
 **Scope:** 
