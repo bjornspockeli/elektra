@@ -374,12 +374,13 @@ nRF Toolbox Menu  | UART Menu     | Edit Button Menu| Configure Command 1 | Edit
 * `nrf_drv_ppi.c`
 * `nrf_drv_timer.c`
 
-##Adding .h files*  
+##Adding .h files 
 
 <img src="https://github.com/bjornspockeli/elektra/blob/master/images/include_path.PNG" width="1000"> 
 Click the "Options for target" button in Keil, then select the C/C++ tab and clik on the "..." on the side of the "Inlude Paths" window. Navigate to the components folder and then find the missing .h file in either nrf_drivers or libraries. 
 
  ##Adding .c files
+ 
 <img src="https://github.com/bjornspockeli/elektra/blob/master/images/add_c_files.png" width="1000"> |
 Right-clik the folder that you want to add the .c file to and select "Add existing files to Group '____'". Navigate to the components folder and then find the missing .c file in either nrf_drivers or libraries. 
 
