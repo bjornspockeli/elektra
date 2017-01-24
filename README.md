@@ -301,6 +301,10 @@ We also have to configure the pin connected to LED_4 as an output so make sure t
 
 8. Install the nRF Toolbox app on you Android/iOS phone. You can find the app [here](https://www.nordicsemi.com/eng/Products/Nordic-mobile-Apps/nRF-Toolbox-App) on Google Play Store and [here](https://itunes.apple.com/us/app/nrf-toolbox/id820906058?mt=8) on Apple App Store. Open the nRF Toolbox app and click the UART symbol.  
 
+
+<!--- ![Image of nRF Toolbox](https://github.com/bjornspockeli/elektra/blob/master/images/nrf_toolbox.png | width=100) --->
+<img src="https://github.com/bjornspockeli/elektra/blob/master/images/nrf_toolbox.png" width="250">
+
 ##Task 8: Control the Servo using the nRF Toolbox App
 **Scope:** 
 
