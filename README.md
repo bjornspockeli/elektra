@@ -191,4 +191,16 @@ Tips:
 * while (app_pwm_channel_duty_set(&PWM1, 0, value) == NRF_ERROR_BUSY) makes sure that the code does not continue before the duty cycle is updated.
 
 ##Task 6: PWM & Buttons
-**Scope:** Modify the button handler from task 1 so that the servo is placed at its minimum angle angle by pressing button 3 and its maximum angle by pressing button 4.  
+**Scope:** Modify the button handler from task 1 so that the servo is placed at its minimum angle angle by pressing button 3 and its maximum angle by pressing button 4.  
+
+##Task 7: Control LEDs via BLE
+**Scope:** Modify the nRF5_SDK_12.2.0\examples\ble_peripheral\ble_app_uart\pca10040\s132\arm5_no_packs example to recognise specific commands and turn on LEDs.
+
+1. Open the ble_app_uart example found in the nRF5_SDK_12.2.0\examples\ble_peripheral\ble_app_uart\pca10040\s132\arm5_no_packs folder.
+2. 
+```C    
+    for (uint32_t i = 0; i < strlen((const char *)data_array); i++)    
+    {        
+    while (app_uart_put(data_array[i]) != NRF_SUCCESS);    
+    }
+```
