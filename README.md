@@ -244,18 +244,20 @@ Tips:
 **Scope:** Modify the ble_app_uart example to recognise specific commands sent from the nRF Toolbox app and turn on a LED when one of these commands are received.
 
 1 - Open the ble_app_uart example found in the nRF5_SDK_12.2.0\examples\ble_peripheral\ble_app_uart\pca10040\s132\arm5_no_packs folder. Find the `DEVICE_NAME` define and change the device to a unique name that is easily recognisable, for example.
-```C   
+
+  
     #define DEVICE_NAME                     "Bjoern_UART"       
-``` 
+
 
 2 - We need a variable to keep track of the current command that the nRF52 should handle. We can do this by creating an enumeration, which is basically a list of commands that are assigned a number from 0 and upwards. We create an enumeration  like this
+
 ```C    
-typedef enum {
-    COMMAND_1,
-    COMMAND_2,
-    COMMAND_3,
-    NO_COMMAND
-} uart_command_t;
+    typedef enum {
+        COMMAND_1,
+        COMMAND_2,
+        COMMAND_3,
+        NO_COMMAND
+    } uart_command_t;
 ```
 Every variable of the uart_command_t type can be set to one of the commands in the list.  We've  added a `NO_COMMAND` command which is going to be the default state when no command has been received or the last command has been completed. After declaring the enumeration type `uart_command_t` we need to create a variable `m_command` of the `uart_command_t` type and initialize it to `NO_COMMAND`, i.e.
 
