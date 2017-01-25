@@ -39,9 +39,11 @@
 #include "bsp_btn_ble.h"
 #include "nrf_delay.h"
 #include "app_pwm.h"
+#include "nrf_temp.h"
 
 APP_PWM_INSTANCE(PWM1,1);                       // Create the instance "PWM1" using TIMER1.
 
+APP_TIMER_DEF(m_temp_timer_id);                 // Create the timer ID "m_temp_timer_id" .
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include the service_changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device. */
 
@@ -665,12 +667,12 @@ void uart_command_handler(uart_command_t * m_command)
             break;
         
         case TEMP_TIMER_START:
-            //err_code = app_timer_start(temp_timer_id, APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER), NULL);
+            err_code = app_timer_start(m_temp_timer_id, APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER), NULL);
             APP_ERROR_CHECK(err_code);
             break;
         
         case TEMP_TIMER_STOP:
-            //err_code = app_timer_stop(temp_timer_id);
+            err_code = app_timer_stop(m_temp_timer_id);
             APP_ERROR_CHECK(err_code);
             break;
         
@@ -711,6 +713,54 @@ static void pwm_init()
 
 }
 
+static int32_t read_temperature()
+{
+    NRF_TEMP->TASKS_START = 1; /** Start the temperature measurement. */
+    
+    while (NRF_TEMP->EVENTS_DATARDY == 0)
+    {
+        // Do nothing.
+    }
+    NRF_TEMP->EVENTS_DATARDY = 0;
+    
+    NRF_TEMP->TASKS_STOP = 1; /** Stop the temperature measurement. */
+    
+    return (nrf_temp_read() / 4);
+}
+
+
+void temp_timer_timeout_handler(void * p_context)
+{
+    int32_t temp;
+    
+    sd_temp_get(&temp);
+    
+    
+    // Send temperature measurement to terminal
+    printf("\r\n Temperature: %f Celsius\r\n",(double)temp*0.25);
+    
+    //Send temperature measurement to nRF Toolbox app
+    uint32_t err_code;
+    uint8_t data[20];
+    sprintf((char *)data, "Temperature: %f", (double)temp*0.25);
+
+    err_code = ble_nus_string_send(&m_nus, data, sizeof(data));
+    APP_ERROR_CHECK(err_code);
+}
+
+void create_timers()
+{
+    uint32_t err_code;
+
+    
+    // Create  temperature timer
+    err_code = app_timer_create(&m_temp_timer_id,
+                                APP_TIMER_MODE_REPEATED,
+                                temp_timer_timeout_handler);
+    APP_ERROR_CHECK(err_code);
+}
+
+
 /**@brief Application main function.
  */
 int main(void)
@@ -734,7 +784,8 @@ int main(void)
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
     
-  
+    create_timers();
+    
     // Enter main loop.
     for (;;)
     {
