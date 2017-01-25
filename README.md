@@ -297,6 +297,45 @@ Tips:
 ##Task 6: PWM & Buttons
 **Scope:** Modify the button handler from task 1 so that the servo is placed at its minimum angle angle by pressing button 3 and its maximum angle by pressing button 4.  
 
+# Hands-on Tasks - Day 3
+
+
+
+##Flashing the SoftDevice to the nRF52 DK
+
+The following tasks uses the S132 v3.0.0 SoftDevice, which must be flashed to your nRF52 DK. There are two ways to flash the SoftDevice to the nRF52 DK.
+
+###Option 1 - nrfjprog
+
+Navigate to the *\components\softdevice\s132\hex* folder. Click the address line, type in cmd and press enter. This should open a terminal window in the *\components\softdevice\s132\hex* folder.
+
+Now type in 
+
+    nrfjprog --help
+
+this should display all the commands that can be used with nrfjprog and what they do. 
+
+In order to flash the SoftDevice you have to use the following command
+
+    nrfjprog --family nrf52 --program s132_nrf52_3.0.0_softdevice.hex --verify
+
+If you get an error stating that the flash is not erased, then you can erase the flash of the chip with the following command
+    
+    nrfjprog --family nrf52 --eraseall
+
+<img src="https://github.com/bjornspockeli/elektra/blob/master/images/nrfjprog.PNG" width="1000"> 
+
+###Option 2 - nRFGO Studio
+
+Download nRFGo Studio from the page linked to below
+
+https://www.nordicsemi.com/eng/Products/2.4GHz-RF/nRFgo-Studio/
+
+Open nRFGo Studio, select the Segger xxxxxxxxx device in the Device Manager, then select the Program SoftDevice tab,  navigate to the *\components\softdevice\s132\hex* folder and select the s132_nrf52_3.0.0_softdevice.hex file and press program 
+
+<img src="https://github.com/bjornspockeli/elektra/blob/master/images/nRFGo_studio.PNG" width="1000"> 
+
+
 ##Task 7: Control LEDs using the nRF Toolbox App
 
 **This task is a _BLUETOOTH TASK_!**
@@ -401,7 +440,7 @@ After declaring the `uart_command_handler` we add the uart_command_handler to th
 6 - Now we want to toggle a led when we receive "COMMAND_1". Since the ble_app_uart example uses LED_1 on the nRF52 DK to indicate if the device is advertising or connected to central, so we have to toggle LED_4 instead. 
 ```C 
     case COMMAND_1:
-        nrf_gpio_pin_toogle(LED_4) 
+        nrf_gpio_pin_toggle(LED_4); 
         break;
 ```
 We also have to configure the pin connected to LED_4 as an output so make sure that you add to main()
@@ -443,7 +482,7 @@ Click the "Options for target" button in Keil, then select the C/C++ tab and cli
 
  ##Adding .c files
  
-<img src="https://github.com/bjornspockeli/elektra/blob/master/images/add_c_files.png" width="1000"> |
+<img src="https://github.com/bjornspockeli/elektra/blob/master/images/add_c_files.png" width="1000"> 
 Right-clik the folder that you want to add the .c file to and select "Add existing files to Group '____'". Navigate to the components folder and then find the missing .c file in either nrf_drivers or libraries. 
 
 
@@ -451,7 +490,7 @@ You also have to make sure that the correct nRF_Drivers and nRF_Libraries are en
 
 ##Modifying sdk_config.c  
 
-<img src="https://github.com/bjornspockeli/elektra/blob/master/images/sdk_config.PNG" width="1000">|
+<img src="https://github.com/bjornspockeli/elektra/blob/master/images/sdk_config.PNG" width="1000">
 
 Under nRF_Libraries the following boxes must be checked
 
@@ -467,7 +506,7 @@ Under nRF_Drivers the following boxes must be checked
 3 - Add `SERVO_POS_1` and  `SERVO_POS_2` to the `uart_command_t` enumeration created in Task 7, step 2. Add these commands to the `nus_data_handler` and the `uart_command_handler`. Call `app_pwm_channel_duty_set` when the commands are processed by the `uart_command_handler`, i.e.
 ```C 
     case SERVO_POS_1:
-        while (app_pwm_channel_duty_set(&PWM1, 5, duty_cycle) == NRF_ERROR_BUSY)
+        while (app_pwm_channel_duty_set(&PWM1, 5, duty_cycle) == NRF_ERROR_BUSY);
         break;
 ```
 
@@ -475,6 +514,84 @@ Under nRF_Drivers the following boxes must be checked
 
 5 - Compile the project, flash it to the nRF52 DK and control the servo using the nRF Toolbox App.
 
-<!--- ##Task 9: Measure the die temperature of the nRF52 and send it to the nRF Toolbox app.
+##Task 9: Measure the die temperature of the nRF52 and send it to the nRF Toolbox app.
 **Scope:** 
- --->
+
+1 - In order to measure the temperature of the nRF52 die you have to read the registers of the TEMP peripheral of the nRF52, see [this](https://infocenter.nordicsemi.com/topic/com.nordic.infocenter.nrf52832.ps.v1.1/temp.html?cp=2_2_0_26#concept_fcz_vw4_sr) page on the Nordic Infocenter. However, the SoftDevice uses this peripheral to calibrate the 16 MHz clock of the nRF52 so that its accurate enough to be used for BLE. We can therefore not access the TEMP registers directly, we have to go through the SoftDevice and ask it to check what the temperature is. This is done by calling the [sd_temp_get](https://infocenter.nordicsemi.com/topic/com.nordic.infocenter.s132.api.v3.0.0/group___n_r_f___s_o_c___f_u_n_c_t_i_o_n_s.html#gade0ea69f513ff1feab2c4f6e1c393313
+) function. 
+
+
+We can now create a function called `read_temperature()` that in turn calls `sd_temp_get` and returns the temperature in degrees celsius.
+
+```C 
+    static double read_temperature()
+    {
+        int32_t temp;
+        sd_temp_get(&temp);
+
+        return ((double)temp*0.25);   
+    }
+```
+
+3 - Next, we're going to create an application timer that calls `read_temperature()` periodically. First, create the timer ID as shown below
+
+```C 
+    APP_TIMER_DEF(m_temp_timer_id);                 // Create the timer ID "m_temp_timer_id" .
+```
+
+4 - Next, we're going to create the application timer timeout handler that is going to call `read_temperature()`. We need to use the `ble_nus_string_send()` function to send the measured temperature to the nRF Toolbox app. This function takes the pointer to an `uint8_t` array so we need to format a string and place it in the array. The  [sprintf](https://www.tutorialspoint.com/c_standard_library/c_function_sprintf.htm) function does exactly this, i.e. copies the content of a string into an array.
+
+```C
+    void temp_timer_timeout_handler(void * p_context)
+    {
+        double temp = read_temperature();
+
+        // Place the temperature measurement into the data array
+        uint32_t err_code;
+        uint8_t data[20];
+        sprintf((char *)data, "Temperature: %f", temp);
+        
+        //Send temperature measurement to nRF Toolbox app
+        err_code = ble_nus_string_send(&m_nus, data, sizeof(data));
+        APP_ERROR_CHECK(err_code);
+    }
+```
+
+
+5 - Next, we need to create the timer and specify that it should use `temp_timer_timeout_handler` as its timeout handler.
+
+```C 
+    void create_timers()
+    {
+        uint32_t err_code;
+        // Create  temperature timer
+        err_code = app_timer_create(&m_temp_timer_id,
+                                    APP_TIMER_MODE_REPEATED,
+                                    temp_timer_timeout_handler);
+        APP_ERROR_CHECK(err_code);
+    }
+```
+6 - Now, the only thing that remains is to start the application timer. However, it is important that the `ble_nus_string_send` function is not called when we're not connected to the nRF Toolbox app. If we try to send the string containing the temperature without being in a connection then the application will crash.  It should therefore only be possible to start the timer when we issue a command from nRF Toolbox.  
+
+Add `TEMP_TIMER_START` and `TEMP_TIMER_STOP` to the uart_command_t enumeration and modify the `nus_data_handler` so that these commands are recognized.
+
+
+Lastly, add the following cases to the `uart_command_handler`
+
+```C 
+        case TEMP_TIMER_START:
+            err_code = app_timer_start(m_temp_timer_id, APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER), NULL);
+            APP_ERROR_CHECK(err_code);
+            break;
+        
+        case TEMP_TIMER_STOP:
+            err_code = app_timer_stop(m_temp_timer_id);
+            APP_ERROR_CHECK(err_code);
+            break;
+```
+
+7 - Configure two buttons in the nRF Toolbox app to send the `TEMP_TIMER_START`and `TEMP_TIMER_STOP` commands
+
+8 - Compile the project and flash it to you nRF52 DK along with the S132 v3.0.0 SoftDevice if its not already flashed to the DK. After pressing the btton you configured to send the `TEMP_TIMER_START` command you should be able to see the temperature in the nRF Toolbox app log ( you open this by holding your finger above the UART text to the left of the screen and swiping from left to right)  
+ 
+<img src="https://github.com/bjornspockeli/elektra/blob/master/images/temperature.png" width="500">
