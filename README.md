@@ -368,7 +368,7 @@ Every variable of the uart_command_t type can be set to one of the commands in t
 
 ```C  
     char uart_string[BLE_NUS_MAX_DATA_LEN];
-    memset(uartstring,0,BLE_NUS_MAX_DATA_LEN);
+    memset(uart_string,0,BLE_NUS_MAX_DATA_LEN);
     memcpy( uart_string, p_data, length);
 ```
 
