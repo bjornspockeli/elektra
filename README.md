@@ -22,6 +22,19 @@ The presentations from the course can be downloaded using the links below:
 
 [BLE Security](https://drive.google.com/open?id=0B21ni_IYbeTXUHlRWUZrbGRWRUE)
 
+### Requests by course participants
+
+For those of you that asked about the Diffie-Hellman key exchange, I recommend that you take a look at the following video that explains the concept.
+
+https://www.youtube.com/watch?v=YEBfamv-_do
+
+For those of you that asked about alternatives to Keil, I recommend taking a look at Segger Embedded Studio
+
+https://devzone.nordicsemi.com/blogs/1032/segger-embedded-studio-a-cross-platform-ide-w-no-c/
+
+and you should also take a look at our Development with Eclipse and GCC tutorial
+
+https://devzone.nordicsemi.com/tutorials/7
 
 ### Course Software
 
