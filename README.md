@@ -1,6 +1,16 @@
 Examples and tasks for the Elektra BLE course.
 -------
 
+### Course Evaluation
+
+Please use the last 5 minutes of the course to fill out the course evaluation in the link below
+
+[Link to course evaluation](https://docs.google.com/forms/d/e/1FAIpQLScDVuMpX1UtlaiAXDowjTt8rVwuVZcZafOsT5o1SLEj1SeHLg/viewform)
+
+It is important to us that you tell us what you liked about the course and what you did not like about the course so that we can improve the course material and presentations.
+
+The evaluation is of course anonymous. 
+
 ### Presentations
 The presentations from the course can be downloaded using the links below:
 
@@ -20,7 +30,6 @@ The course software can be found in this folder on Google Drive:
 [Course Software Folder](https://drive.google.com/open?id=0B21ni_IYbeTXQ0t3cFZXRGRrR0E)
 
 Copy the content of the folder to your computer and follow the instructions given in the readme.txt file. 
-
 
 ## Hands-on Tasks - Day 1 
 
@@ -123,11 +132,23 @@ in that order.
         }
     }
 ```
-The APP_UART_DATA_READY event will be generated for each single byte that is received by the nRF52, which means that [app_uart_get](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__uart.html#gacddb5b7b711ef104f9eb181a13bc4503) must be called everytime the event is received. Since the [app_uart_get](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__uart.html#gacddb5b7b711ef104f9eb181a13bc4503) function takes the pointer to a uint8_t, we need an array to store the received bytes and and index variable to keep track of how many bytes we have received, i.e.
+The APP_UART_DATA_READY event will be generated for each single byte that is received by the nRF52, which means that [app_uart_get](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__uart.html#gacddb5b7b711ef104f9eb181a13bc4503) must be called everytime the event is received. 
+
+```C
+    case APP_UART_DATA_READY:
+        app_uart_get(&data_array[index]);
+        index++;
+        
+        break;              
+```
+
+Since the [app_uart_get](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__uart.html#gacddb5b7b711ef104f9eb181a13bc4503) function takes the pointer to a uint8_t, we need an array to store the received bytes and and index variable to keep track of how many bytes we have received, i.e.
+
 ```C
     static uint8_t data_array[32];
-    static uint8_t index = 0;
+    static uint8_t index = 0;              
 ```
+
 Most terminals append the `\n` character, also known as the Line Feed character, to the end of the string that is sent. The `\n`  indicates that the next character should be printed on a newline. Therefore it makes sense to receive bytes until we see the `\n` character and then send the entire string back to the terminal using [app_uart_put](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__uart.html#ga2e4c8407274a151e72ed5a226529dc36). 
 
 ```C
