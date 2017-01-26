@@ -36,13 +36,81 @@ and you should also take a look at our Development with Eclipse and GCC tutorial
 
 https://devzone.nordicsemi.com/tutorials/7
 
-### Course Software
+## Course Software
 
-The course software can be found in this folder on Google Drive:
+The tasks in this course requires that you download software, e.g. SKD, IDEs, MDKs and command-line tools. As the favoured option
 
-[Course Software Folder](https://drive.google.com/open?id=0B21ni_IYbeTXQ0t3cFZXRGRrR0E)
+### Nordic nRF5x Software Development Kit
 
-Copy the content of the folder to your computer and follow the instructions given in the readme.txt file. 
+The first thing you have to do is to download the nRF5x Software Development Kit which contains all the source code for the libraries, drivers and examples that we're going to use in this course. 
+
+The nRF5x SDK v12.2.0 can be downloaded by clicking the link below
+
+http://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v12.x.x/nRF5_SDK_12.2.0_f012efa.zip
+
+After the download has finished you should extract the content to a folder of your choosing, but try to keep the path short e.g.
+
+    C:\Nordic_Semiconductor\nRF5_SDK_12.2.0
+
+### Windows
+
+If your using a computer with a Windows OS, then you need to install the software listed below, in the order they are listed.
+
+#### 1. Keil ARM MDK v5.22
+
+https://www.keil.com/demo/eval/arm.htm
+
+#### 2. nRF5x MDK for Keil
+
+http://www.nordicsemi.com/eng/nordic/download_resource/51500/20/99480371
+
+#### 3. nRF Commandline Tools
+
+http://www.nordicsemi.com/eng/nordic/download_resource/51499/38/44235066
+
+### Mac OSX
+
+As Keil uVision is only available for Windows, we recommend that you use Segger Embedded Studio instead. 
+
+#### 1. Segger Embedded Studio
+
+https://www.segger.com/downloads/embeddedstudio
+
+#### 2. J-Link Software and Documentation Pack
+https://www.segger.com/downloads/jlink#
+
+#### 2. nRF5x Commandline Tools for OSX
+http://www.nordicsemi.com/eng/nordic/download_resource/53408/11/3272144
+
+### Linux 
+
+#### 1. GNU toolchain for ARM Cortex-M
+
+https://launchpad.net/gcc-arm-embedded/+download
+
+Download and install the latest version. Then make sure to add the path to your toolchain to your OS PATH environment variable:
+
+    <path to install directory>/GNU Tools ARM Embedded/4.9 2015q3/bin
+
+Adding the path makes it possible to run the toolchain executables from any directory using the terminal. To verify that the path is set correctly, type the following in your terminal:
+
+    arm-none-eabi-gcc --version
+
+This will return the version of the C compiler if the executable is found in your path.
+
+To build an example in the SDK you first need to set the toolchain path in makefile.windows or makefile.posix depending on platform you are using. That is, the .posix should be edited if your are working on either Linux or OS X. These files are located in
+
+<SDK>/components/toolchain/gcc
+
+Open the file in a text editor, and make sure that the GNU_INSTALL_ROOT variable is pointing to your Gnu tools for ARM embedded Processors install directory. 
+
+#### 2. nRF5x toolset tar for Linux 32-bit (nrfjprog and mergehex) 
+
+http://www.nordicsemi.com/eng/nordic/download_resource/52621/15/41505072 (Linux32)
+
+http://www.nordicsemi.com/eng/nordic/download_resource/51505/20/4271639 (Linux64)
+
+# Hands-on Tasks 
 
 ## Hands-on Tasks - Day 1 
 
