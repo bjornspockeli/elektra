@@ -114,7 +114,6 @@ http://www.nordicsemi.com/eng/nordic/download_resource/51505/20/4271639 (Linux64
 
 ## Hands-on Tasks - Day 1 
 
-During the first day of the course we will use the nRF52832 as 
 
 The tasks should be performed in the order that they are given and you should use the Template Project found in  nRF5_SDK_12.2.0\examples\peripheral\template_project.
 
@@ -123,13 +122,146 @@ The hands-on tasks for the first course day will cover the use of the applicatio
 If you have any compilation problems when using the function calls referred to in the task description then make sure that you enable the the correct modules in the skd_config.c file.
 
 ##Task 1: Application Timer
-**Scope:** Use an application timer to toggle one (or several) Leds on the nRF52 DK at a given interval. 
+**Scope:** Use an application timer to toggle one LED on the nRF52 DK at a given interval. 
 
-1. Follow the [Application Timer Tutorial](https://devzone.nordicsemi.com/tutorials/19/) on DevZone to create a repeated timer.
-2. Create the functions `start_timer` and `stop_timer` that will be used to start and stop the application timer.  
-2. Turn on or toggle a led in the app_timer_timeout_handler using [nrf_gpio_pin_clear](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__nrf__gpio.html#ga5c671adfb6b44f32c9d99d3156aff2b1) or [nrf_gpio_pin_toggle](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__nrf__gpio.html#gac7f7bf539f5bb053b4a313ec51d8157e).
+The Application Timer library provides a user friendly way of using the Real Time Counter 1 (RTC1) peripheral to create multiple timer instances. The RTC uses the Low Frequency Clock (LFCLK). Most applications keep the LFCLK active at all times. When using a SoftDevice the LFCLK is always active. Therefor there is normally very little extra power consumption associated with using the application timer. As the clock is 32.768 kHz and the RTC is 24 bit, the time/tick resolution is limited, but it takes a substantial amount of time before the counter wrap around (from 0xFFFFFF to 0). By using the 12 bit (1/x) prescaler the frequency of the RTC can be lowered.
 
-Note: The LEDs on the nRF52 are active low.
+In this part of the tutorial you will configure the library, and use it to create timers that call your timeout event handlers. These can be called repeatedly at a configurable interval or once at a configurable time from now.
+
+**1 -** Include the required header files by adding the following lines below the existing include statements:
+
+```C
+#include "app_timer.h"
+#include "nrf_drv_clock.h"
+```
+
+2 - As a SoftDevice is not enabled in this tutorial, the LFCLK must be requested explicitly. One way of doing this is using the Clock driver. Add the following function somewhere before `main()`
+
+```C
+static void lfclk_request(void)
+{
+    uint32_t err_code = nrf_drv_clock_init();
+    APP_ERROR_CHECK(err_code);
+    nrf_drv_clock_lfclk_request(NULL);
+}
+```
+
+Add a line calling lfclk_request() in the start of the main() function:
+
+```C
+// Request LF clock.
+lfclk_request();
+```
+
+3 - The Application Timer should be initialized with the APP_TIMER_INIT() macro. This must be called before any other calls to the Application Timer API. The four parameters must be selected so that they meet the requirements of the application:
+
+* PRESCALER: will be written to the RTC1 PRESCALER register. This determines the time resolution of the timer, and thus the amount of time it can count before it wrap around. On the nRF52 the RTC is a 24-bit counter with a 12 bit prescaler that run on the 32.768 LFCLK. The counter increment frequency (tick rate) fRTC [kHz] = 32.768/(PRESCALER+1). For example, a prescaler value of 15 means that the tick rate or time resolution is 32.768 kHz * 1/(15+1) = 2.048 kHz and the timer will wrap around every (2^24) * 1/2.048 kHz = 8192 s.
+
+* OP_QUEUES_SIZE: determines the maximum number of events that can be queued. Let's say you are calling the API function several times in a row to start a single shot timer, this determines how many times you can have queued before the queue gets full.
+
+* SCHEDULER_FUNC should be set to false when scheduler is not used, as is the case in this tutorial. See the Scheduler tutorial for how to use the Scheduler with the application timer.
+
+In this course you will create several timers. Add the following defines (which represent the parameters described above) close to the top of your code
+
+```C
+// General application timer settings.
+#define APP_TIMER_PRESCALER             15    // Value of the RTC1 PRESCALER register.
+#define APP_TIMER_OP_QUEUE_SIZE         3     // Size of timer operation queues.
+```
+Then put this line in main() in order to initialize the app timer (after the call to lfclk_request()):
+
+```C
+// Initialize the application timer module.
+APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
+```
+
+4 - An application timer in the repeated mode will restart each time it expires. Every time it expires the timeout handler will be called. This makes it suitable for performing a task at a regular interval, such as toggling a LED, which is what you will do now. 
+Application timers are created using app_timer_create(). This function takes three parameters:
+
+* p_timer_id: pointer to the ID of the timer, which will be populated during the execution of this call.
+* mode: either single shot (APP_TIMER_MODE_SINGLE_SHOT) or repeated (APP_TIMER_MODE_REPEATED).
+* timeout_handler: pointer to the timeout handler.
+
+First, create a variable that can hold the timer ID to be populated by `app_timer_create()`. Add the following line to your code, close to the top of the file below the include statments
+
+```C
+APP_TIMER_DEF(m_led_a_timer_id);
+```
+Then you will have to create the timeout event handler, which we will use to toggle LED 1 every time it is called. You toggle the pin connected to a led in using  [nrf_gpio_pin_toggle](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__nrf__gpio.html#gac7f7bf539f5bb053b4a313ec51d8157e). Note: The LEDs on the nRF52 are active low.
+
+```C
+// Timeout handler for the timer
+static void timer_handler(void * p_context)
+{
+    // Toggle led 1
+    nrf_gpio_pin_toggle(LED_1);
+}
+```
+
+It is a good idea to wrap the creation of the timer in a function, in order to keep a minimal main() function, i.e.
+
+```C
+static void create_timer()
+{   
+    uint32_t err_code;
+
+    // Create timers
+    err_code = app_timer_create(&m_led_a_timer_id,
+                                APP_TIMER_MODE_REPEATED,
+                                timer_handler);
+    APP_ERROR_CHECK(err_code);
+}
+```
+5 - Next, we should create the functions `start_timer` and `stop_timer` that will be used to start and stop the application timer. 
+
+```C
+static void start_timer()
+{
+    uint32_t err_code;
+
+    // Start timer
+    err_code = app_timer_start(m_led_a_timer_id,
+                                APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER),
+                                NULL);
+    APP_ERROR_CHECK(err_code);
+}
+```
+
+```C
+static void stop_timer()
+{
+     uint32_t err_code;
+
+    // Stop timer
+    err_code = app_timer_stop(m_led_a_timer_id);
+    APP_ERROR_CHECK(err_code);
+}
+```
+
+6 - After performing all the steps above your main should look like this
+
+```C
+int main(void)
+{
+    // Start the LFCLK
+    lfclk_request();
+
+    // Set LED_1 pin as output
+    nrf_gpio_cfg_output(LED_1);
+    nrf_gpio_pin_clear(LED_1);
+
+    // Initialize the application timer module.
+    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
+
+    create_timer();
+    start_timer();
+   
+    while (true)
+    {
+        
+    }
+}
+```
 
 ##Task 2: Button Handler
 **Scope:** Use the buttons on the nRF52 and the button handler library(app_button) to start and stop the application timer from Task 1. The button handler library is documented on [this](http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/group__app__button.html?resultof=%22%62%75%74%74%6f%6e%22%20%22%68%61%6e%64%6c%65%72%22%20) Infocenter page. 
