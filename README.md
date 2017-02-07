@@ -1,6 +1,14 @@
 Examples and tasks for the Elektra BLE course.
 -------
 
+## TODO
+
+- [ ] Create Segger Embedded Projects for template_project and ble_app_uart 
+- [ ] Task 1 should be performed as a walkthrough so that course participants get used to Keil/SES
+- [ ] Add SAADC task that shows how to measure VDD.  
+
+
+
 ### Course Evaluation
 
 Please use the last 5 minutes of the course to fill out the course evaluation in the link below
